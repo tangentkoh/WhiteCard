@@ -30,6 +30,7 @@ public class GameManager : MonoBehaviour
 
     public PlayerData[] players = new PlayerData[2];
     public int currentPlayerIndex { get; private set; } = 0;
+    private int secondPlayerIndex = 1;
     private bool isCpuMode = true;
 
     private void Awake() => Instance = this;
@@ -50,6 +51,7 @@ public class GameManager : MonoBehaviour
         players[1] = new PlayerData { id = 1, isCpu = isCpuMode };
 
         currentPlayerIndex = Random.Range(0, 2);
+        secondPlayerIndex = (currentPlayerIndex == 0) ? 1 : 0;
 
         for (int i = 0; i < 2; i++)
         {
@@ -192,22 +194,31 @@ public class GameManager : MonoBehaviour
     private bool CheckWinCondition()
     {
         // 表記用プレイヤー名の設定
-        string p1Name = isCpuMode ? "あなた" : "1P";
+        string p1Name = isCpuMode ? "YOU" : "1P";
         string p2Name = isCpuMode ? "CPU" : "2P";
+        int firstPlayerIndex = (secondPlayerIndex == 0) ? 1 : 0;
 
         // 1. KO判定 (26枚以上)
-        if (players[0].whiteCardCount >= 26) { ShowResult($"{p1Name} のKO勝利！"); return true; }
-        if (players[1].whiteCardCount >= 26) { ShowResult($"{p2Name} のKO勝利！"); return true; }
-
+        if (players[0].whiteCardCount >= 26) { ShowResult($"{p1Name} のKO勝利!"); return true; }
+        if (players[1].whiteCardCount >= 26) { ShowResult($"{p2Name} のKO勝利!"); return true; }
+        
         // 2. 山札切れ判定
-        if (spellDeck.Count == 0 && currentPlayerIndex == 1)
+        if (spellDeck.Count == 0 && currentPlayerIndex == secondPlayerIndex)
         {
             if (players[0].whiteCardCount > players[1].whiteCardCount)
-                ShowResult($"山札終了：{p1Name} の勝利！");
+            {
+                ShowResult($"山札終了：{p1Name} の勝利!");
+            }
             else if (players[1].whiteCardCount > players[0].whiteCardCount)
-                ShowResult($"山札終了：{p2Name} の勝利！");
+            {
+                ShowResult($"山札終了：{p2Name} の勝利!");
+            }
             else
-                ShowResult($"山札終了（同数）：先攻により {p1Name} の勝利！");
+            {
+                // ★修正：同数の場合、不利な「先攻プレイヤー」が勝利
+                string winnerName = (firstPlayerIndex == 0) ? p1Name : p2Name;
+                ShowResult($"山札終了（同数）：先攻により {winnerName} の勝利!");
+            }
             return true;
         }
 
